@@ -1,7 +1,7 @@
 [project]
 name = "wuwa-achievement"
 version = "0.1.0"
-description = "Add your description here"
+description = "Offline Wuthering Waves achievement tracker page generator"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [

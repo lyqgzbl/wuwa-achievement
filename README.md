@@ -1,24 +1,29 @@
 # wuwa-achievement
 
-Offline Wuthering Waves achievement tracker generator.
+鸣潮离线成就统计页面生成器。
 
-This repository reads user-provided SQLite database files and generates a static
-HTML achievement checklist page. It does not include Pak extraction, key
-acquisition, process injection, runtime hooks, local game path discovery, or game
-automation.
+本项目用于读取用户自行提供的 SQLite 数据库文件，并生成可直接部署到 GitHub Pages 的静态成就勾选页面。生成结果为自包含 HTML，不依赖后端服务，适合用于查看、搜索和手动标记成就完成情况。
 
-## Required Inputs
+在线页面：<https://wuwa.lyqgzbl.com/achievement/>
 
-Prepare these files yourself before running the generator:
+## 功能特点
 
-- Achievement config database: `db_achievement.db`
-- Simplified Chinese text databases: one or more `lang_multi_text*.db`
+- 生成简体中文成就清单页面
+- 支持按分类浏览成就内容
+- 支持在静态页面中手动勾选完成状态
+- 输出单个自包含 HTML 文件，便于公开部署
+- 仅读取命令行显式传入的数据库路径
 
-The generator only reads the paths passed through CLI arguments.
+## 所需输入
 
-## Generate HTML
+运行前需要自行准备以下文件：
 
-Run from the repository root:
+- 成就配置数据库：`db_achievement.db`
+- 简体中文文本数据库：一个或多个 `lang_multi_text*.db`
+
+## 生成页面
+
+在仓库根目录运行：
 
 ```bash
 python -m Tools \
@@ -28,21 +33,16 @@ python -m Tools \
   --out docs/achievement_tracker_zh.html
 ```
 
-The generated page is a self-contained static HTML file:
+生成后的页面文件为：
 
 ```text
 docs/achievement_tracker_zh.html
 ```
 
-## Arguments
+## 参数说明
 
-- `--config-db`: path to `db_achievement.db`
-- `--multitext-db`: path to `lang_multi_text*.db`; can be passed multiple times
-- `--out`: output HTML path; defaults to `out/achievement_tracker_zh.html`
-- `--root`: output root; defaults to the current directory
+- `--config-db`：`db_achievement.db` 的路径
+- `--multitext-db`：`lang_multi_text*.db` 的路径，可重复传入多个
+- `--out`：输出 HTML 路径，默认 `out/achievement_tracker_zh.html`
+- `--root`：输出根目录，默认当前目录
 
-## Public Deployment
-
-The GitHub workflow for this repository should deploy only static files from
-`docs/`. It should not run extraction, key acquisition, runtime automation, or DB
-generation jobs.
