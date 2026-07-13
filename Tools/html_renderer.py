@@ -135,6 +135,7 @@ def render_html(dataset: dict[str, Any]) -> str:
     .sticky-wrapper.scrolled header {{ margin-bottom: 6px; }}
     header h2 {{ margin: 0; font-size: 24px; font-weight: 700; letter-spacing: -0.5px; transition: all 0.4s ease; white-space: nowrap; overflow: hidden; }}
     .sticky-wrapper.scrolled header h2 {{ width: 0; margin: 0; padding: 0; opacity: 0; font-size: 0; }}
+    .game-version {{ color: var(--text-muted); font-size: 13px; white-space: nowrap; }}
     .overall-wrap {{ display: flex; align-items: center; gap: 12px; flex: 1; min-width: 200px; }}
     .overall-text {{ font-variant-numeric: tabular-nums; font-size: 14px; font-weight: 500; white-space: nowrap; }}
     .progress-bar {{
@@ -307,6 +308,7 @@ def render_html(dataset: dict[str, Any]) -> str:
     <div class="sticky-container">
       <header>
         <h2>成就统计</h2>
+        <span id="gameVersion" class="game-version" hidden></span>
         <div class="overall-wrap">
           <span id="overall" class="overall-text"></span>
           <div class="progress-bar"><div id="overallBar" class="progress-bar-inner"></div></div>
@@ -336,6 +338,12 @@ def render_html(dataset: dict[str, Any]) -> str:
 
 <script>
 const DATA = {dataset_json};
+const gameVersion = typeof DATA.game_version === 'string' ? DATA.game_version.trim() : '';
+const gameVersionEl = document.getElementById('gameVersion');
+if (gameVersion) {{
+  gameVersionEl.textContent = '游戏版本 ' + gameVersion;
+  gameVersionEl.hidden = false;
+}}
 const STORAGE_KEY = 'ww_achievement_completed_v1';
 const OPEN_CAT_KEY = 'ww_achievement_open_categories_v1';
 const OPEN_GRP_KEY = 'ww_achievement_open_groups_v1';
@@ -386,6 +394,8 @@ function loadCompleted() {{
 function saveCompleted(set) {{
   localStorage.setItem(STORAGE_KEY, JSON.stringify(Array.from(set)));
 }}
+
+let completed = loadCompleted();
 
 function loadOpenSet(key) {{
   try {{
@@ -445,6 +455,7 @@ async function importProgressFromFile(file) {{
   localStorage.setItem(STORAGE_KEY, JSON.stringify(completed));
   localStorage.setItem(OPEN_CAT_KEY, JSON.stringify(openCategories.map(String)));
   localStorage.setItem(OPEN_GRP_KEY, JSON.stringify(openGroups.map(String)));
+  completed = loadCompleted();
   render();
 }}
 
@@ -521,8 +532,20 @@ function makeProgressSpan(done, total) {{
   return wrap;
 }}
 
+function updateOverallProgress() {{
+  const counts = computeCounts(DATA.categories || [], completed);
+  document.getElementById('overall').textContent = counts.done + ' / ' + counts.total;
+  const overallBar = document.getElementById('overallBar');
+  const pct = counts.total > 0 ? (counts.done / counts.total) * 100 : 0;
+  overallBar.style.width = pct + '%';
+  if (counts.done === counts.total && counts.total > 0) {{
+    overallBar.classList.add('full');
+  }} else {{
+    overallBar.classList.remove('full');
+  }}
+}}
+
 function render() {{
-  const completed = loadCompleted();
   const openCats = loadOpenSet(OPEN_CAT_KEY);
   const openGrps = loadOpenSet(OPEN_GRP_KEY);
   const q = (document.getElementById('q').value || '').trim().toLowerCase();
@@ -639,10 +662,26 @@ function render() {{
         li.className = 'ach-item' + (isDone ? ' done' : '');
 
         li.addEventListener('click', () => {{
-          const set = loadCompleted();
-          if (set.has(a.id)) set.delete(a.id); else set.add(a.id);
-          saveCompleted(set);
-          render();
+          const selection = window.getSelection();
+          if (selection && !selection.isCollapsed && selection.toString().trim()) {{
+            return;
+          }}
+          const q = document.getElementById('q').value.trim();
+          const onlyTodo = document.getElementById('onlyTodo').checked;
+          const needFullRender = q.length > 0 || onlyTodo;
+          const isDone = completed.has(a.id);
+          if (isDone) {{
+            completed.delete(a.id);
+          }} else {{
+            completed.add(a.id);
+          }}
+          saveCompleted(completed);
+          if (needFullRender) {{
+            render();
+            return;
+          }}
+          li.classList.toggle('done');
+          updateOverallProgress();
         }});
 
         const customCb = document.createElement('div');

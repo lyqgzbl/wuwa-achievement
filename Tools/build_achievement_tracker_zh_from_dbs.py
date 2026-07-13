@@ -71,6 +71,11 @@ def main() -> int:
         help="Locale label embedded into export (default: zh-Hans)",
     )
     parser.add_argument(
+        "--game-version",
+        default="",
+        help="Game version displayed in the generated page (for example: v3.5)",
+    )
+    parser.add_argument(
         "--config-db",
         required=True,
         help="Path to db_achievement.db",
@@ -104,7 +109,14 @@ def main() -> int:
     wanted = collect_wanted_text_ids(achievements, groups, categories)
     texts = load_multitext_from_dbs(multitext_dbs, wanted)
 
-    dataset = build_dataset(args.locale, achievements, groups, categories, texts)
+    dataset = build_dataset(
+        args.locale,
+        achievements,
+        groups,
+        categories,
+        texts,
+        args.game_version,
+    )
 
     _ensure_parent_dir(out_path)
     out_path.write_text(render_html(dataset), encoding="utf-8")

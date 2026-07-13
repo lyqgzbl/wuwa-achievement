@@ -14,6 +14,7 @@ def build_dataset(
     groups: Sequence[Group],
     categories: Sequence[Category],
     texts: dict[str, str],
+    game_version: str = "",
 ) -> dict[str, Any]:
     def t(key: str) -> str:
         if not key:
@@ -82,4 +83,8 @@ def build_dataset(
             }
         )
 
-    return {"locale": locale, "categories": cat_items}
+    return {
+        "locale": locale,
+        "game_version": game_version,
+        "categories": cat_items,
+    }
